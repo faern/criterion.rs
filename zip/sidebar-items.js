@@ -1,0 +1,1 @@
+initSidebarItems({"macro":[["zip!","This macro emulates an \"any-arity\" free function that zips iterators"]],"struct":[["Zip2","Two-iterator zipper"],["Zip3","Three-iterator zipper"],["Zip4","Four-iterator zipper"],["Zip5","Five-iterator zipper"]]});

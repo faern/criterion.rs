@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `zip` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, zip">
+
+    <title>zip - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <section class="sidebar">
+        
+        <p class='location'></p><script>window.sidebarCurrent = {name: 'zip', ty: 'mod', relpath: '../'};</script>
+    </section>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press 'S' to search, '?' for more options..."
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>zip</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="#" title="collapse all docs">[&minus;]</a>
+        </span><a id='src-0' class='srclink' href='../src/zip/lib.rs.html#1-398' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Iterator zippers</p>
+
+<p>This crate provides &quot;zippers&quot; as tuple structs: <code>Zip2</code>, <code>Zip3</code>, etc. These structs accept
+iterators as fields, and provides iteration over the &quot;zipped&quot; elements.</p>
+
+<p>The functionality is similar to the <code>Iterator::zip</code> method. The difference is that the <code>zip</code>
+method always produces an iterator that yields <em>two-element</em> tuples. If you want to zip 3
+iterators, you&#39;ll write <code>xs.zip(ys).zip(zs)</code> which returns an iterator that yields elements of
+type <code>((X, Y), Z)</code>. On the other hand, with this library you can write <code>Zip3(xs, ys, zs)</code> which
+is an iterator that yields elements of type <code>(X, Y, Z)</code>.</p>
+<pre id='rust-example-rendered' class='rust '>
+<span class='kw'>use</span> <span class='ident'>zip</span>::<span class='ident'>Zip3</span>;
+
+<span class='kw'>let</span> <span class='ident'>chars</span> <span class='op'>=</span> [<span class='string'>&#39;a&#39;</span>, <span class='string'>&#39;b&#39;</span>, <span class='string'>&#39;c&#39;</span>];
+<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>v</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>0</span>, <span class='number'>1</span>, <span class='number'>2</span>];
+<span class='kw'>for</span> (<span class='kw-2'>&amp;</span><span class='ident'>c</span>, <span class='ident'>i</span>, <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>j</span>) <span class='kw'>in</span> <span class='ident'>Zip3</span>(<span class='ident'>chars</span>.<span class='ident'>iter</span>(), <span class='number'>0i32</span>..<span class='number'>5</span>, <span class='ident'>v</span>.<span class='ident'>iter_mut</span>()) {
+    <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>i</span> <span class='op'>&lt;</span> <span class='number'>3</span>);
+    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>i</span>, <span class='ident'>j</span>);
+}
+</pre>
+</div><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='macro' href='macro.zip!.html'
+                               title='zip::zip!'>zip!</a></td>
+                        <td class='docblock short'>
+                             <p>This macro emulates an &quot;any-arity&quot; free function that zips iterators</p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Zip2.html'
+                               title='zip::Zip2'>Zip2</a></td>
+                        <td class='docblock short'>
+                             <p>Two-iterator zipper</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Zip3.html'
+                               title='zip::Zip3'>Zip3</a></td>
+                        <td class='docblock short'>
+                             <p>Three-iterator zipper</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Zip4.html'
+                               title='zip::Zip4'>Zip4</a></td>
+                        <td class='docblock short'>
+                             <p>Four-iterator zipper</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Zip5.html'
+                               title='zip::Zip5'>Zip5</a></td>
+                        <td class='docblock short'>
+                             <p>Five-iterator zipper</p>
+
+                        </td>
+                    </tr>
+                </table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <div id="help" class="hidden">
+        <div class="shortcuts">
+            <h1>Keyboard shortcuts</h1>
+            <dl>
+                <dt>?</dt>
+                <dd>Show this help dialog</dd>
+                <dt>S</dt>
+                <dd>Focus the search field</dd>
+                <dt>&larrb;</dt>
+                <dd>Move up in search results</dd>
+                <dt>&rarrb;</dt>
+                <dd>Move down in search results</dd>
+                <dt>&#9166;</dt>
+                <dd>Go to active search result</dd>
+            </dl>
+        </div>
+        <div class="infos">
+            <h1>Search tricks</h1>
+            <p>
+                Prefix searches with a type followed by a colon (e.g.
+                <code>fn:</code>) to restrict the search to a given type.
+            </p>
+            <p>
+                Accepted types are: <code>fn</code>, <code>mod</code>,
+                <code>struct</code>, <code>enum</code>,
+                <code>trait</code>, <code>typedef</code> (or
+                <code>tdef</code>).
+            </p>
+        </div>
+    </div>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "zip";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script async src="../search-index.js"></script>
+</body>
+</html>

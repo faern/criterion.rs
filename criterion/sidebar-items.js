@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Bencher","Helper struct to build functions that follow the setup - bench - teardown pattern"],["Criterion","The benchmark manager"]]});
