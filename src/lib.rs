@@ -221,7 +221,7 @@ impl Bencher {
     ///
     /// # Timing loop
     ///
-    /// ```
+    /// ``` ignore
     /// inputs = (0..iters).map(|_| setup()).collect();
     ///
     /// start = Instant::now();
@@ -233,7 +233,7 @@ impl Bencher {
     ///
     /// # Timing model
     ///
-    /// ```
+    /// ``` text
     /// elapsed = Instant::now + iters * (routine + vec::IntoIter::next)
     /// ```
     pub fn iter_with_large_setup<I, S, R>(&mut self, mut setup: S, mut routine: R)
@@ -247,6 +247,44 @@ impl Bencher {
             routine(test::black_box(input));
         }
         self.elapsed = start.elapsed();
+    }
+
+    /// Times a `routine` that needs to consume its input by first creating a pool of inputs.
+    /// Allows the results of the `routine` to be verified by the provided `verify` function.
+    ///
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
+    /// for input in inputs {
+    ///     let start = Instant::now();
+    ///     let output = routine(input);
+    ///     let elapsed = start.elapsed();
+    ///     self.elapsed = self.elapsed + elapsed;
+    ///     verify(output);
+    /// }
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// ``` text
+    /// elapsed = iters * (Instant::now + routine)
+    /// ```
+    pub fn iter_with_setup_and_verify<'t, I, S, R, U, V>(
+        &mut self,
+        mut setup: S,
+        mut routine: R,
+        mut verify: V) where
+        S: FnMut() -> I, R: FnMut(I) -> U, V: FnMut(U), I: 't, R: 't
+    {
+        let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
+        for input in inputs {
+            let start = Instant::now();
+            let output = test::black_box(routine(input));
+            let elapsed = start.elapsed();
+            self.elapsed = self.elapsed + elapsed;
+            verify(output);
+        }
     }
 }
 
