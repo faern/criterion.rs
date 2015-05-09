@@ -111,7 +111,7 @@ impl Bencher {
     /// Criterion::default().
     ///     bench("alloc", |b| {
     ///         b.iter_with_large_drop(|| {
-    ///             Vec::from_elem(1024 * 1024, 0u8)
+    ///             (0..(1024 * 1024)).collect::<Vec<u32>()
     ///         })
     ///     });
     /// ```
@@ -164,7 +164,7 @@ impl Bencher {
     /// Criterion::default().
     ///     bench("large_dealloc", |b| {
     ///         b.iter_with_large_setup(|| {
-    ///             Vec::from_elem(1024 * 1024, 0u8)
+    ///             (0..(1024 * 1024)).collect::<Vec<u32>()
     ///         }, |v| {
     ///             drop(v)
     ///         })
@@ -213,7 +213,7 @@ impl Bencher {
     /// Criterion::default().
     ///     bench("dealloc", |b| {
     ///         b.iter_with_setup(|| {
-    ///             Vec::from_elem(1024 * 1024, 0u8)
+    ///             (0..(1024 * 1024)).collect::<Vec<u32>()
     ///         }, |v| {
     ///             drop(v)
     ///         })
@@ -234,6 +234,12 @@ impl Bencher {
         }
     }
 
+    /// Timing loop that allows setup code to be run before timing starts
+    /// and verify code to be run after timing stops.
+    ///
+    /// Might be useful for example to bench sorting algorithms. Set up vector of unsorted
+    /// data in setup and verify that it's sorted in verify.
+    ///
     /// # Timing loop
     ///
     /// ``` ignore
