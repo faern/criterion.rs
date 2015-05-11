@@ -35,10 +35,27 @@ use std::process::Command;
 
 use rustc_serialize::json;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read,Write};
 use std::path::Path;
 
 use estimate::{Distributions, Estimates};
+use stats::univariate::Percentiles;
+
+/// TODO
+pub struct Fun<I: fmt::Display> {
+    n: String,
+    f: Box<FnMut(&mut Bencher, &I)>,
+}
+
+impl<I: fmt::Display> Fun<I> {
+    /// TODO
+    pub fn new<F: FnMut(&mut Bencher, &I) + 'static>(name: &str, f: F) -> Fun<I> {
+        Fun {
+            n: name.to_string(),
+            f: Box::new(f),
+        }
+    }
+}
 
 /// Helper struct to build functions that follow the setup - bench - teardown pattern
 #[derive(Clone, Copy)]
@@ -123,7 +140,7 @@ impl Bencher {
 
         self.ns_start = time::precise_time_ns();
         for _ in 0..iters {
-            outputs.push(routine());
+            outputs.push(test::black_box(routine()));
         }
         self.ns_end = time::precise_time_ns();
 
@@ -525,6 +542,32 @@ impl Criterion {
         analysis::function(id, f, self);
 
         self
+    }
+
+    /// TODO
+    pub fn bench_compare_implementations<I>(&mut self,
+        id: &str,
+        funs: Vec<Fun<I>>,
+        input: &I) -> &mut Criterion
+        where
+        I: fmt::Display
+    {
+        let percentiles = analysis::functions(id, funs, input, self);
+
+        Criterion::write_csv_stats(percentiles, &format!(".criterion/{}/stats.csv", id));
+
+        self
+    }
+
+    fn write_csv_stats<P: AsRef<Path>>(percentiles: Vec<(String, Percentiles<f64>)>, path: &P) {
+        let mut content = format!("benchmark, min, q1, median, q3, max");
+        for (id, p) in percentiles {
+            let min = p.at(0.0);
+            let (q1,q2,q3) = p.quartiles();
+            let max = p.at(100.0);
+            content = format!("{}\n{}, {}, {}, {}, {}, {}", content, id, min, q1, q2, q3, max);
+        }
+        File::create(path).unwrap().write_all(content.as_bytes()).ok().expect("Couldn't save data");
     }
 
     /// Benchmarks a function under various inputs
