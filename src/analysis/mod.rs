@@ -6,7 +6,7 @@ use std::process::Command;
 use stats::Distribution;
 use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
-use stats::univariate::Sample;
+use stats::univariate::{Sample,Percentiles};
 use stats::univariate::outliers::tukey::{LabeledSample, self};
 
 use estimate::{Distributions, Estimates, Statistic};
@@ -14,6 +14,7 @@ use program::Program;
 use routine::{Function, Routine};
 use {Bencher, ConfidenceInterval, Criterion, Estimate};
 use {format, fs, plot, report};
+use ::Fun;
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
@@ -43,6 +44,25 @@ pub fn function<F>(id: &str, f: F, criterion: &Criterion) where F: FnMut(&mut Be
     common(id, &mut Function(f), criterion);
 
     println!("");
+}
+
+pub fn functions<I>(id: &str,
+    funs: Vec<Fun<I>>,
+    input: &I,
+    criterion: &Criterion) -> Vec<(String, Percentiles<f64>)> where
+    I: fmt::Display
+{
+    let mut percentiles = vec![];
+    for fun in funs.into_iter() {
+        let id = format!("{}/{}", id, fun.n);
+        let mut f = fun.f;
+
+        let this_percentiles = common(&id, &mut Function(|b| f(b, input)), criterion);
+        percentiles.push((id, this_percentiles));
+    }
+
+    summarize(id, criterion);
+    percentiles
 }
 
 pub fn function_with_inputs<I, F>(
@@ -90,7 +110,7 @@ pub fn program_with_inputs<I, F>(
 }
 
 // Common analysis procedure
-fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
+fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) -> Percentiles<f64> where
     R: Routine,
 {
     println!("Benchmarking {}", id);
@@ -136,6 +156,8 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     if base_dir_exists(id) {
         compare::common(id, data, avg_times, &estimates, criterion);
     }
+
+    avg_times.percentiles()
 }
 
 fn base_dir_exists(id: &str) -> bool {

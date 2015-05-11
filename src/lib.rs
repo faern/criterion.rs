@@ -37,10 +37,27 @@ use std::{fmt, mem};
 
 use rustc_serialize::json;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read,Write};
 use std::path::Path;
 
 use estimate::{Distributions, Estimates};
+use stats::univariate::Percentiles;
+
+/// TODO
+pub struct Fun<I: fmt::Display> {
+    n: String,
+    f: Box<FnMut(&mut Bencher, &I)>,
+}
+
+impl<I: fmt::Display> Fun<I> {
+    /// TODO
+    pub fn new<F: FnMut(&mut Bencher, &I) + 'static>(name: &str, f: F) -> Fun<I> {
+        Fun {
+            n: name.to_string(),
+            f: Box::new(f),
+        }
+    }
+}
 
 /// Helper struct to time routines
 ///
@@ -512,6 +529,18 @@ impl Criterion {
     {
         analysis::function(id, f, self);
 
+        self
+    }
+
+    /// TODO
+    pub fn bench_compare_implementations<I>(&mut self,
+        id: &str,
+        funs: Vec<Fun<I>>,
+        input: &I) -> &mut Criterion
+        where
+        I: fmt::Display
+    {
+        let percentiles = analysis::functions(id, funs, input, self);
         self
     }
 
