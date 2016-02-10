@@ -541,7 +541,21 @@ impl Criterion {
         I: fmt::Display
     {
         let percentiles = analysis::functions(id, funs, input, self);
+
+        Criterion::write_csv_stats(percentiles, &format!(".criterion/{}/stats.csv", id));
+
         self
+    }
+
+    fn write_csv_stats<P: AsRef<Path>>(percentiles: Vec<(String, Percentiles<f64>)>, path: &P) {
+        let mut content = format!("benchmark, min, q1, median, q3, max");
+        for (id, p) in percentiles {
+            let min = p.at(0.0);
+            let (q1,q2,q3) = p.quartiles();
+            let max = p.at(100.0);
+            content = format!("{}\n{}, {}, {}, {}, {}, {}", content, id, min, q1, q2, q3, max);
+        }
+        File::create(path).unwrap().write_all(content.as_bytes()).ok().expect("Couldn't save data");
     }
 
     /// Benchmarks a function under various inputs
