@@ -1,3 +1,5 @@
+#![rustfmt_skip]
+
 use std::path::{Path, PathBuf};
 use std::{iter, str};
 

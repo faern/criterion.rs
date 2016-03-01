@@ -10,6 +10,7 @@
 #![deny(missing_docs)]
 #![feature(test)]
 #![feature(time2)]
+#![feature(custom_attribute)]
 
 #[macro_use]
 extern crate log;
