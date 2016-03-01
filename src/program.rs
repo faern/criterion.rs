@@ -36,8 +36,8 @@ impl Program {
         }
     }
 
-    pub fn send<T>(&mut self, line: T) -> &mut Program where
-        T: fmt::Display,
+    pub fn send<T>(&mut self, line: T) -> &mut Program
+        where T: fmt::Display
     {
         use std::io::Write;
 
@@ -59,34 +59,38 @@ impl Program {
                 match self.stderr.read_to_string(&mut self.buffer) {
                     Err(e) => {
                         panic!("`read from child stderr`: {}", e);
-                    },
+                    }
                     Ok(_) => {
                         println!("stderr:\n{}", self.buffer);
                     }
                 }
 
                 panic!("`read from child stdout`: {}", e);
-            },
+            }
             Ok(_) => &self.buffer,
         }
     }
 }
 
 impl Routine for Program {
-    fn bench<I>(&mut self, iters: I) -> Vec<f64> where I: Iterator<Item=u64> {
+    fn bench<I>(&mut self, iters: I) -> Vec<f64>
+        where I: Iterator<Item = u64>
+    {
         let mut n = 0;
         for iters in iters {
             self.send(iters);
             n += 1;
         }
 
-        (0..n).map(|_| {
-            let msg = self.recv();
-            let msg = msg.trim();
+        (0..n)
+            .map(|_| {
+                let msg = self.recv();
+                let msg = msg.trim();
 
-            let elapsed: u64 = msg.parse().ok().expect("Couldn't parse program output");
-            elapsed as f64
-        }).collect()
+                let elapsed: u64 = msg.parse().ok().expect("Couldn't parse program output");
+                elapsed as f64
+            })
+            .collect()
     }
 
     fn warm_up(&mut self, how_long_ns: Duration) -> (u64, u64) {

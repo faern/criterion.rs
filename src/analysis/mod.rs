@@ -7,14 +7,14 @@ use stats::Distribution;
 use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
 use stats::univariate::Sample;
-use stats::univariate::outliers::tukey::{LabeledSample, self};
+use stats::univariate::outliers::tukey::{self, LabeledSample};
 
 use estimate::{Distributions, Estimates, Statistic};
 use program::Program;
 use routine::{Function, Routine};
 use {Bencher, ConfidenceInterval, Criterion, Estimate};
 use {format, fs, plot, report};
-use ::Fun;
+use Fun;
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
@@ -40,16 +40,15 @@ pub fn summarize(id: &str, criterion: &Criterion) {
     }
 }
 
-pub fn function<F>(id: &str, f: F, criterion: &Criterion) where F: FnMut(&mut Bencher) {
+pub fn function<F>(id: &str, f: F, criterion: &Criterion)
+    where F: FnMut(&mut Bencher)
+{
     common(id, &mut Function(f), criterion);
 
     println!("");
 }
 
-pub fn functions<I>(id: &str,
-    funs: Vec<Fun<I>>,
-    input: &I,
-    criterion: &Criterion)
+pub fn functions<I>(id: &str, funs: Vec<Fun<I>>, input: &I, criterion: &Criterion)
     where I: fmt::Display
 {
     for fun in funs.into_iter() {
@@ -60,15 +59,10 @@ pub fn functions<I>(id: &str,
     summarize(id, criterion);
 }
 
-pub fn function_over_inputs<I, F>(
-    id: &str,
-    mut f: F,
-    inputs: I,
-    criterion: &Criterion,
-) where
-    F: FnMut(&mut Bencher, &I::Item),
-    I: IntoIterator,
-    I::Item: fmt::Display,
+pub fn function_over_inputs<I, F>(id: &str, mut f: F, inputs: I, criterion: &Criterion)
+    where F: FnMut(&mut Bencher, &I::Item),
+          I: IntoIterator,
+          I::Item: fmt::Display
 {
     for input in inputs {
         let id = format!("{}/{}", id, input);
@@ -85,15 +79,10 @@ pub fn program(id: &str, prog: &mut Command, criterion: &Criterion) {
     println!("");
 }
 
-pub fn program_over_inputs<I, F>(
-    id: &str,
-    mut prog: F,
-    inputs: I,
-    criterion: &Criterion,
-) where
-    F: FnMut() -> Command,
-    I: IntoIterator,
-    I::Item: fmt::Display,
+pub fn program_over_inputs<I, F>(id: &str, mut prog: F, inputs: I, criterion: &Criterion)
+    where F: FnMut() -> Command,
+          I: IntoIterator,
+          I::Item: fmt::Display
 {
     for input in inputs {
         let id = format!("{}/{}", id, input);
@@ -105,8 +94,8 @@ pub fn program_over_inputs<I, F>(
 }
 
 // Common analysis procedure
-fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
-    R: Routine,
+fn common<R>(id: &str, routine: &mut R, criterion: &Criterion)
+    where R: Routine
 {
     println!("Benchmarking {}", id);
 
@@ -114,9 +103,10 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
 
     rename_new_dir_to_base(id);
 
-    let avg_times = iters.iter().zip(times.iter()).map(|(&iters, &elapsed)| {
-        elapsed / iters
-    }).collect::<Vec<f64>>();
+    let avg_times = iters.iter()
+                         .zip(times.iter())
+                         .map(|(&iters, &elapsed)| elapsed / iters)
+                         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
     fs::mkdirp(&format!(".criterion/{}/new", id));
@@ -124,9 +114,8 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     let data = Data::new(&iters, &times);
     let labeled_sample = outliers(id, avg_times);
     if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the estimated sample PDF",
-            plot::pdf(data, labeled_sample, id));
+        elapsed!("Plotting the estimated sample PDF",
+                 plot::pdf(data, labeled_sample, id));
     }
     let (distribution, slope) = regression(id, data, criterion);
     let (mut distributions, mut estimates) = estimates(avg_times, criterion);
@@ -135,17 +124,12 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     distributions.insert(Statistic::Slope, distribution);
 
     if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the distribution of the absolute statistics",
-            plot::abs_distributions(
-                &distributions,
-                &estimates,
-                id));
+        elapsed!("Plotting the distribution of the absolute statistics",
+                 plot::abs_distributions(&distributions, &estimates, id));
     }
 
-    fs::save(
-        &(data.x().as_slice(), data.y().as_slice()),
-        &format!(".criterion/{}/new/sample.json", id));
+    fs::save(&(data.x().as_slice(), data.y().as_slice()),
+             &format!(".criterion/{}/new/sample.json", id));
     fs::save(&estimates, &format!(".criterion/{}/new/estimates.json", id));
 
     if base_dir_exists(id) {
@@ -158,21 +142,20 @@ fn base_dir_exists(id: &str) -> bool {
 }
 
 // Performs a simple linear regression on the sample
-fn regression(
-    id: &str,
-    data: Data<f64, f64>,
-    criterion: &Criterion,
-) -> (Distribution<f64>, Estimate) {
+fn regression(id: &str,
+              data: Data<f64, f64>,
+              criterion: &Criterion)
+              -> (Distribution<f64>, Estimate) {
     let cl = criterion.confidence_level;
 
     println!("> Performing linear regression");
 
-    let distribution = elapsed!(
-        "Bootstrapped linear regression",
-        data.bootstrap(criterion.nresamples, |d| (Slope::fit(d).0,))).0;
+    let distribution = elapsed!("Bootstrapped linear regression",
+                                data.bootstrap(criterion.nresamples, |d| (Slope::fit(d).0,)))
+                           .0;
 
     let point = Slope::fit(data);
-    let (lb, ub) =  distribution.confidence_interval(criterion.confidence_level);
+    let (lb, ub) = distribution.confidence_interval(criterion.confidence_level);
     let se = distribution.std_dev(None);
 
     let (lb_, ub_) = (Slope(lb), Slope(ub));
@@ -180,16 +163,12 @@ fn regression(
     report::regression(data, (lb_, ub_));
 
     if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting linear regression",
-            plot::regression(
-                data,
-                &point,
-                (lb_, ub_),
-                id));
+        elapsed!("Plotting linear regression",
+                 plot::regression(data, &point, (lb_, ub_), id));
     }
 
-    (distribution, Estimate {
+    (distribution,
+     Estimate {
         confidence_interval: ConfidenceInterval {
             confidence_level: cl,
             lower_bound: lb,
@@ -205,16 +184,14 @@ fn outliers<'a>(id: &str, avg_times: &'a Sample<f64>) -> LabeledSample<'a, f64> 
     let sample = tukey::classify(avg_times);
 
     report::outliers(sample);
-    fs::save(&sample.fences(), &format!(".criterion/{}/new/tukey.json", id));
+    fs::save(&sample.fences(),
+             &format!(".criterion/{}/new/tukey.json", id));
 
     sample
 }
 
 // Estimates the statistics of the population from the sample
-fn estimates(
-    avg_times: &Sample<f64>,
-    criterion: &Criterion,
-) -> (Distributions, Estimates) {
+fn estimates(avg_times: &Sample<f64>, criterion: &Criterion) -> (Distributions, Estimates) {
     fn stats(sample: &Sample<f64>) -> (f64, f64, f64, f64) {
         let mean = sample.mean();
         let std_dev = sample.std_dev(Some(mean));
@@ -235,21 +212,19 @@ fn estimates(
 
     println!("> Estimating the statistics of the sample");
     let distributions = {
-        let (a, b, c, d) = elapsed!(
-        "Bootstrapping the absolute statistics",
-        avg_times.bootstrap(nresamples, stats));
+        let (a, b, c, d) = elapsed!("Bootstrapping the absolute statistics",
+                                    avg_times.bootstrap(nresamples, stats));
 
         vec![a, b, c, d]
     };
-    let statistics = [
-        Statistic::Mean,
-        Statistic::Median,
-        Statistic::MedianAbsDev,
-        Statistic::StdDev,
-    ];
-    let distributions: Distributions = statistics.iter().map(|&x| {
-        x
-    }).zip(distributions.into_iter()).collect();
+    let statistics = [Statistic::Mean,
+                      Statistic::Median,
+                      Statistic::MedianAbsDev,
+                      Statistic::StdDev];
+    let distributions: Distributions = statistics.iter()
+                                                 .map(|&x| x)
+                                                 .zip(distributions.into_iter())
+                                                 .collect();
     let estimates = Estimate::new(&distributions, &points, cl);
 
     report::abs(&estimates);
@@ -262,6 +237,10 @@ fn rename_new_dir_to_base(id: &str) {
     let base_dir = root_dir.join("base");
     let new_dir = root_dir.join("new");
 
-    if base_dir.exists() { fs::rmrf(&base_dir) }
-    if new_dir.exists() { fs::mv(&new_dir, &base_dir) };
+    if base_dir.exists() {
+        fs::rmrf(&base_dir)
+    }
+    if new_dir.exists() {
+        fs::mv(&new_dir, &base_dir)
+    };
 }

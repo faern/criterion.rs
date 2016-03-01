@@ -34,7 +34,7 @@ pub fn outliers(sample: LabeledSample<f64>) {
         return;
     }
 
-    let percent = |n: usize| { 100. * n as f64 / sample_size as f64 };
+    let percent = |n: usize| 100. * n as f64 / sample_size as f64;
 
     println!("> Found {} outliers among {} measurements ({:.2}%)",
              noutliers,
@@ -61,9 +61,8 @@ pub fn regression(data: Data<f64, f64>, (lb, ub): (Slope<f64>, Slope<f64>)) {
         format::time(ub.0),
         );
 
-    println!(
-         "  > {:>6}  {:0.7} {:0.7}",
-         "R^2",
-         lb.r_squared(data),
-         ub.r_squared(data));
+    println!("  > {:>6}  {:0.7} {:0.7}",
+             "R^2",
+             lb.r_squared(data),
+             ub.r_squared(data));
 }

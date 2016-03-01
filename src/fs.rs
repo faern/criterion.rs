@@ -1,16 +1,16 @@
-use std::fs::{File, ReadDir, self};
+use std::fs::{self, File, ReadDir};
 use std::path::Path;
 
 use rustc_serialize::json::Encoder;
 use rustc_serialize::{Decodable, Encodable, json};
 
 // TODO Proper error handling
-pub fn load<A, P: ?Sized>(path: &P) -> A where
-    A: Decodable,
-    P: AsRef<Path>,
+pub fn load<A, P: ?Sized>(path: &P) -> A
+    where A: Decodable,
+          P: AsRef<Path>
 {
-    fn load_<A>(path: &Path) -> A where
-        A: Decodable,
+    fn load_<A>(path: &Path) -> A
+        where A: Decodable
     {
         use std::io::Read;
 
@@ -18,11 +18,15 @@ pub fn load<A, P: ?Sized>(path: &P) -> A where
 
         match File::open(path) {
             Err(e) => panic!("{}", e),
-            Ok(mut f) => match f.read_to_string(&mut string) {
-                Err(e) => panic!("{}", e),
-                Ok(_) => match json::decode(&*string) {
-                    Err(e) => panic!("Couldn't decode {} ({:?})", string, e),
-                    Ok(thing) => thing,
+            Ok(mut f) => {
+                match f.read_to_string(&mut string) {
+                    Err(e) => panic!("{}", e),
+                    Ok(_) => {
+                        match json::decode(&*string) {
+                            Err(e) => panic!("Couldn't decode {} ({:?})", string, e),
+                            Ok(thing) => thing,
+                        }
+                    }
                 }
             }
         }
@@ -38,8 +42,8 @@ pub fn ls(dir: &Path) -> ReadDir {
     }
 }
 
-pub fn mkdirp<P>(path: &P) where
-    P: AsRef<Path>,
+pub fn mkdirp<P>(path: &P)
+    where P: AsRef<Path>
 {
     fn mkdirp_(path: &Path) {
         if let Err(e) = fs::create_dir_all(path) {
@@ -63,12 +67,12 @@ pub fn rmrf(path: &Path) {
 }
 
 // TODO Proper error handling
-pub fn save<D, P>(data: &D, path: &P) where
-    D: Encodable,
-    P: AsRef<Path>,
+pub fn save<D, P>(data: &D, path: &P)
+    where D: Encodable,
+          P: AsRef<Path>
 {
-    fn save_<D>(data: &D, path: &Path) where
-        D: Encodable,
+    fn save_<D>(data: &D, path: &Path)
+        where D: Encodable
     {
         use std::io::Write;
 

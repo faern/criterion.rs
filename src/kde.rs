@@ -3,11 +3,10 @@ use stats::univariate::Sample;
 use stats::univariate::kde::kernel::Gaussian;
 use stats::univariate::kde::{Bandwidth, Kde};
 
-pub fn sweep(
-    sample: &Sample<f64>,
-    npoints: usize,
-    range: Option<(f64, f64)>,
-) -> (Box<[f64]>, Box<[f64]>) {
+pub fn sweep(sample: &Sample<f64>,
+             npoints: usize,
+             range: Option<(f64, f64)>)
+             -> (Box<[f64]>, Box<[f64]>) {
     let x_min = sample.min();
     let x_max = sample.max();
 

@@ -51,7 +51,8 @@ pub struct Fun<I: fmt::Display> {
     f: Box<FnMut(&mut Bencher, &I)>,
 }
 
-impl<I> Fun<I> where I: fmt::Display {
+impl<I> Fun<I> where I: fmt::Display
+{
     /// Create a new `Fun` given a name and a closure
     pub fn new<F>(name: &str, f: F) -> Fun<I>
         where F: FnMut(&mut Bencher, &I) + 'static
@@ -103,8 +104,8 @@ impl Bencher {
     ///
     /// NOTE `Bencher` will choose `iters` to make `Instant::now` negligible compared to the product
     /// on the RHS.
-    pub fn iter<O, R>(&mut self, mut routine: R) where
-        R: FnMut() -> O,
+    pub fn iter<O, R>(&mut self, mut routine: R)
+        where R: FnMut() -> O
     {
         let start = Instant::now();
         for _ in 0..self.iters {
@@ -315,7 +316,6 @@ pub struct Criterion {
 }
 
 impl Default for Criterion {
-
     /// Creates a benchmark manager with the following default settings:
     ///
     /// - Sample size: 100 measurements
@@ -349,7 +349,6 @@ impl Default for Criterion {
 }
 
 impl Criterion {
-
     /// Changes the size of the sample
     ///
     /// A bigger sample should yield more accurate results, if paired with a "sufficiently" large
@@ -463,7 +462,7 @@ impl Criterion {
     /// Enables plotting
     pub fn with_plots(&mut self) -> &mut Criterion {
         match self.plotting {
-            Plotting::NotAvailable => {},
+            Plotting::NotAvailable => {}
             _ => self.plotting = Plotting::Enabled,
         }
 
@@ -473,7 +472,7 @@ impl Criterion {
     /// Disabled plotting
     pub fn without_plots(&mut self) -> &mut Criterion {
         match self.plotting {
-            Plotting::NotAvailable => {},
+            Plotting::NotAvailable => {}
             _ => self.plotting = Plotting::Disabled,
         }
 
@@ -507,8 +506,8 @@ impl Criterion {
     ///
     /// Criterion::default().bench_function("routine", routine);
     /// ```
-    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion where
-        F: FnMut(&mut Bencher),
+    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion
+        where F: FnMut(&mut Bencher)
     {
         analysis::function(id, f, self);
 
@@ -543,10 +542,7 @@ impl Criterion {
     ///
     /// Criterion::default().bench_functions("Fibonacci", funs, &14);
     /// ```
-    pub fn bench_functions<I>(&mut self,
-        id: &str,
-        funs: Vec<Fun<I>>,
-        input: &I) -> &mut Criterion
+    pub fn bench_functions<I>(&mut self, id: &str, funs: Vec<Fun<I>>, input: &I) -> &mut Criterion
         where I: fmt::Display
     {
         analysis::functions(id, funs, input, self);
@@ -566,15 +562,10 @@ impl Criterion {
     ///         b.iter(|| vec![0u8; size]);
     ///     }, &[1024, 2048, 4096]);
     /// ```
-    pub fn bench_function_over_inputs<I, F>(
-        &mut self,
-        id: &str,
-        f: F,
-        inputs: I,
-    ) -> &mut Criterion where
-        I: IntoIterator,
-        I::Item: fmt::Display,
-        F: FnMut(&mut Bencher, &I::Item),
+    pub fn bench_function_over_inputs<I, F>(&mut self, id: &str, f: F, inputs: I) -> &mut Criterion
+        where I: IntoIterator,
+              I::Item: fmt::Display,
+              F: FnMut(&mut Bencher, &I::Item)
     {
         analysis::function_over_inputs(id, f, inputs, self);
 
@@ -628,15 +619,14 @@ impl Criterion {
     ///
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
     /// receive the id: `${id}/${input}`.
-    pub fn bench_program_over_inputs<I, F>(
-        &mut self,
-        id: &str,
-        program: F,
-        inputs: I,
-    ) -> &mut Criterion where
-        F: FnMut() -> Command,
-        I: IntoIterator,
-        I::Item: fmt::Display,
+    pub fn bench_program_over_inputs<I, F>(&mut self,
+                                           id: &str,
+                                           program: F,
+                                           inputs: I)
+                                           -> &mut Criterion
+        where F: FnMut() -> Command,
+              I: IntoIterator,
+              I::Item: fmt::Display
     {
         analysis::program_over_inputs(id, program, inputs, self);
 
@@ -703,19 +693,23 @@ pub struct Estimate {
 
 impl Estimate {
     fn new(distributions: &Distributions, points: &[f64], cl: f64) -> Estimates {
-        distributions.iter().zip(points.iter()).map(|((&statistic, distribution), &point)| {
-            let (lb, ub) = distribution.confidence_interval(cl);
+        distributions.iter()
+                     .zip(points.iter())
+                     .map(|((&statistic, distribution), &point)| {
+                         let (lb, ub) = distribution.confidence_interval(cl);
 
-            (statistic, Estimate {
-                confidence_interval: ConfidenceInterval {
-                    confidence_level: cl,
-                    lower_bound: lb,
-                    upper_bound: ub,
-                },
-                point_estimate: point,
-                standard_error: distribution.std_dev(None),
-            })
-        }).collect()
+                         (statistic,
+                          Estimate {
+                             confidence_interval: ConfidenceInterval {
+                                 confidence_level: cl,
+                                 lower_bound: lb,
+                                 upper_bound: ub,
+                             },
+                             point_estimate: point,
+                             standard_error: distribution.std_dev(None),
+                         })
+                     })
+                     .collect()
     }
 
     fn load(path: &Path) -> Option<Estimates> {
@@ -723,12 +717,16 @@ impl Estimate {
 
         match File::open(path) {
             Err(_) => None,
-            Ok(mut f) => match f.read_to_string(&mut string) {
-                Err(_) => None,
-                Ok(_) => match json::decode(&string) {
+            Ok(mut f) => {
+                match f.read_to_string(&mut string) {
                     Err(_) => None,
-                    Ok(estimates) => Some(estimates),
-                },
+                    Ok(_) => {
+                        match json::decode(&string) {
+                            Err(_) => None,
+                            Ok(estimates) => Some(estimates),
+                        }
+                    }
+                }
             }
         }
     }
